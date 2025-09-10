@@ -31,7 +31,6 @@ export default function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [customSystemPrompt, setCustomSystemPrompt] = useState("");
   const [streamingText, setStreamingText] = useState("");
   const bottomRef = useRef(null);
 
@@ -43,14 +42,27 @@ export default function ChatPage() {
   useEffect(() => {
     // Ensure locale-sensitive rendering only happens on the client after mount
     setIsMounted(true);
-    fetchJSON("/api/sessions").then((data) => setSessions(data.sessions));
+    // Auto-create a fresh session and do not load previous sessions
+    (async () => {
+      try {
+        const { session } = await fetchJSON("/api/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: "Career Counseling Chat" }),
+        });
+        setActiveSession(session);
+        setSessions([session]);
+        setMessages([]);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
   }, []);
 
+  // Do not fetch old messages when switching sessions; always start empty
   useEffect(() => {
     if (!activeSession) return;
-    fetchJSON(`/api/messages?sessionId=${activeSession.id}`).then((data) =>
-      setMessages(data.messages)
-    );
+    setMessages([]);
   }, [activeSession]);
 
   useEffect(() => {
@@ -58,7 +70,7 @@ export default function ChatPage() {
   }, [messages]);
 
   async function onNewSession() {
-    const title = prompt("Session title", "Career Counseling Chat");
+    const title = "Career Counseling Chat";
     const { session } = await fetchJSON("/api/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -79,7 +91,6 @@ export default function ChatPage() {
         body: JSON.stringify({
           sessionId: activeSession.id,
           content: input,
-          systemPrompt: customSystemPrompt,
         }),
       });
       if (!streamRes.ok || !streamRes.body) {
@@ -111,8 +122,7 @@ export default function ChatPage() {
         setStreamingText((t) => t + chunk);
       }
 
-      const refetched = await fetchJSON(`/api/messages?sessionId=${activeSession.id}`);
-      setMessages(refetched.messages);
+      // Do not refetch from server; keep current view minimal
     } finally {
       setLoading(false);
     }
@@ -120,57 +130,26 @@ export default function ChatPage() {
 
   return (
     <div className="min-h-dvh flex bg-[var(--background)] text-[var(--foreground)]">
-      <aside className="w-64 border-r p-4 hidden md:block" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold">Sessions</h2>
-          <button
-            onClick={onNewSession}
-            className="text-sm border rounded px-2 py-1 hover:bg-[var(--muted)]"
-          >
-            New
-          </button>
-        </div>
-        <ul className="space-y-1">
-          {sessions.map((s) => (
-            <li key={s.id}>
-              <button
-                className={`text-left w-full px-2 py-1 rounded ${
-                  activeSession?.id === s.id ? "bg-[var(--muted)]" : "hover:bg-[var(--muted)]"
-                }`}
-                onClick={() => setActiveSession(s)}
-              >
-                <div className="text-sm font-medium truncate">{s.title}</div>
-                <div className="text-xs text-neutral-500" suppressHydrationWarning>
-                  {isMounted ? new Date(s.created_at).toLocaleString() : ""}
-                </div>
-              </button>
-            </li>
-          ))}
-        </ul>
+      {/* Hide sessions UI */}
+      <aside className="hidden" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
       </aside>
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col min-h-dvh">
         <header className="p-4 border-b flex items-center justify-between gap-4" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
           <div className="font-semibold">
-            {activeSession ? activeSession.title : "No session selected"}
+            {activeSession ? activeSession.title : "Preparing session..."}
           </div>
-          <div className="flex items-center gap-2">
-            <input
-              value={customSystemPrompt}
-              onChange={(e) => setCustomSystemPrompt(e.target.value)}
-              placeholder="Optional: custom system prompt"
-              className="hidden md:block border rounded px-2 py-1 w-[320px]"
-            />
+          <div className="flex items-center gap-2 min-w-0">
             <button
               onClick={onNewSession}
-              className="text-sm border rounded px-2 py-1 hover:bg-[var(--muted)] md:hidden"
+              className="text-sm border rounded px-2 py-1 hover:bg-[var(--muted)]"
             >
               New
             </button>
           </div>
         </header>
-        <section className="flex-1 overflow-y-auto p-4 space-y-3" style={{ background: "var(--background)" }}>
+        <section className="flex-1 overflow-y-auto p-4 space-y-3 pb-24" style={{ background: "var(--background)" }}>
           {!activeSession && (
-            <div className="text-neutral-500">Create or select a session to start.</div>
+            <div className="text-neutral-500">Preparing a new session…</div>
           )}
           {messages.map((m) => (
             <div key={m.id} className="max-w-[80ch]">
@@ -199,28 +178,30 @@ export default function ChatPage() {
           )}
           <div ref={bottomRef} />
         </section>
-        <footer className="p-4 border-t" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
-          <div className="flex gap-2">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={activeSession ? "Type your message..." : "Create/select a session first"}
-              className="flex-1 border rounded px-3 py-2"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  onSend();
-                }
-              }}
-            />
-            <button
-              disabled={!canSend || loading}
-              onClick={onSend}
-              className="border rounded px-4 py-2 disabled:opacity-50"
-              style={{ background: "var(--accent)", color: "var(--accent-foreground)", borderColor: "var(--accent)" }}
-            >
-              {loading ? "Sending..." : "Send"}
-            </button>
+        <footer className="p-4 border-t fixed bottom-0 left-0 right-0 z-10" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
+          <div className="mx-auto w-full max-w-screen-xl">
+            <div className="flex gap-2 w-full items-end px-4 md:px-0">
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={activeSession ? "Type your message..." : "Preparing session..."}
+                className="flex-1 min-w-0 border rounded px-3 py-2"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    onSend();
+                  }
+                }}
+              />
+              <button
+                disabled={!canSend || loading}
+                onClick={onSend}
+                className="border rounded px-4 py-2 disabled:opacity-50"
+                style={{ background: "var(--accent)", color: "var(--accent-foreground)", borderColor: "var(--accent)" }}
+              >
+                {loading ? "Sending..." : "Send"}
+              </button>
+            </div>
           </div>
         </footer>
       </main>

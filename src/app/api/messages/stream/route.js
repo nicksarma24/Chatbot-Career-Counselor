@@ -35,15 +35,10 @@ export async function POST(req) {
     return NextResponse.json({ error: insertUserErr.message }, { status: 500 });
   }
 
-  // Build full history for context
-  const { data: allMessages } = await supabase
-    .from("messages")
-    .select("role, content")
-    .eq("session_id", sessionId)
-    .order("created_at", { ascending: true });
-  const history = [...(allMessages ?? [])];
+  // Build minimal context: only system + current user message (no prior history)
+  const history = [];
   if (systemPrompt && typeof systemPrompt === "string" && systemPrompt.trim().length > 0) {
-    history.unshift({ role: "system", content: systemPrompt.trim() });
+    history.push({ role: "system", content: systemPrompt.trim() });
   }
 
   // Create a streaming response (single-chunk using Cohere)
@@ -54,14 +49,10 @@ export async function POST(req) {
         try {
           // Map to Cohere format
           let preamble = "You are a helpful, empathetic career counselor. Provide concrete, actionable advice, ask clarifying questions, and keep responses concise and structured.";
-          const chatHistory = [];
           for (const m of history) {
             if (m.role === "system") {
               preamble = m.content || preamble;
-              continue;
             }
-            if (m.role === "user") chatHistory.push({ role: "USER", message: m.content });
-            if (m.role === "assistant") chatHistory.push({ role: "CHATBOT", message: m.content });
           }
 
           const res = await fetch("https://api.cohere.ai/v1/chat", {
@@ -73,7 +64,7 @@ export async function POST(req) {
             body: JSON.stringify({
               model: "command-r",
               message: content,
-              chat_history: chatHistory,
+              chat_history: [], // no previous messages
               preamble,
               temperature: 0.4,
             }),

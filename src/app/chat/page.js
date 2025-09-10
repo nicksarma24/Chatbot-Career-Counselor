@@ -55,7 +55,7 @@ export default function ChatPage() {
             id: `assistant-greeting-${Date.now()}`,
             session_id: session.id,
             role: "assistant",
-            content: "Hello, how are you doing?",
+            content: "Hello, how are you doing? How can I help you with your career guidence",
             created_at: new Date().toISOString(),
           },
         ]);

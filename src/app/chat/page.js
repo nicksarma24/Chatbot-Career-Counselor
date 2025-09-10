@@ -40,9 +40,7 @@ export default function ChatPage() {
   ]);
 
   useEffect(() => {
-    // Ensure locale-sensitive rendering only happens on the client after mount
     setIsMounted(true);
-    // Auto-create a fresh session and do not load previous sessions
     (async () => {
       try {
         const { session } = await fetchJSON("/api/sessions", {
@@ -52,18 +50,22 @@ export default function ChatPage() {
         });
         setActiveSession(session);
         setSessions([session]);
-        setMessages([]);
+        setMessages([
+          {
+            id: `assistant-greeting-${Date.now()}`,
+            session_id: session.id,
+            role: "assistant",
+            content: "Hello, how are you doing?",
+            created_at: new Date().toISOString(),
+          },
+        ]);
       } catch (e) {
         console.error(e);
       }
     })();
   }, []);
 
-  // Do not fetch old messages when switching sessions; always start empty
-  useEffect(() => {
-    if (!activeSession) return;
-    setMessages([]);
-  }, [activeSession]);
+  // Removed effect that cleared messages on activeSession change
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -76,9 +78,20 @@ export default function ChatPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title }),
     });
-    setSessions((s) => [session, ...s]);
+    setSessions([session]); // Clear all previous sessions
     setActiveSession(session);
-    setMessages([]);
+    setMessages([
+      {
+        id: `assistant-greeting-${Date.now()}`,
+        session_id: session.id,
+        role: "assistant",
+        content: "How can I help you with career guidance today?",
+        created_at: new Date().toISOString(),
+      },
+    ]); // Clear all previous messages
+    setInput("");
+    setLoading(false);
+    setStreamingText("");
   }
 
   async function onSend() {

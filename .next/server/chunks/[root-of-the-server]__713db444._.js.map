@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"","debugId":null}},
+    {"offset": {"line": 55, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/nikhil.s5/Downloads/Oration/career-counselor-chat/src/app/api/sessions/route.js"],"sourcesContent":["import { NextResponse } from \"next/server\";\r\n\r\nexport async function POST(req) {\r\n\ttry {\r\n\t\tconst body = await req.json().catch(() => ({}));\r\n\t\tconst title = typeof body?.title === \"string\" && body.title.trim().length > 0 ? body.title.trim() : \"New Session\";\r\n\t\tconst session = {\r\n\t\t\tid: crypto.randomUUID(),\r\n\t\t\ttitle,\r\n\t\t\tcreated_at: new Date().toISOString(),\r\n\t\t};\r\n\t\treturn NextResponse.json({ session });\r\n\t} catch (e) {\r\n\t\treturn NextResponse.json({ error: \"Failed to create session\" }, { status: 500 });\r\n\t}\r\n}\r\n\r\n\r\n"],"names":[],"mappings":";;;;AAAA;;AAEO,eAAe,KAAK,GAAG;IAC7B,IAAI;QACH,MAAM,OAAO,MAAM,IAAI,IAAI,GAAG,KAAK,CAAC,IAAM,CAAC,CAAC,CAAC;QAC7C,MAAM,QAAQ,OAAO,MAAM,UAAU,YAAY,KAAK,KAAK,CAAC,IAAI,GAAG,MAAM,GAAG,IAAI,KAAK,KAAK,CAAC,IAAI,KAAK;QACpG,MAAM,UAAU;YACf,IAAI,OAAO,UAAU;YACrB;YACA,YAAY,IAAI,OAAO,WAAW;QACnC;QACA,OAAO,gJAAY,CAAC,IAAI,CAAC;YAAE;QAAQ;IACpC,EAAE,OAAO,GAAG;QACX,OAAO,gJAAY,CAAC,IAAI,CAAC;YAAE,OAAO;QAA2B,GAAG;YAAE,QAAQ;QAAI;IAC/E;AACD","debugId":null}}]
+}

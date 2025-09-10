@@ -14,10 +14,11 @@ function messagePayload(baseMessages) {
 }
 
 export async function POST(req) {
-  const cohereKey = process.env.COHERE_API_KEY  || "vdcFzipj6WmsuMir75KhPiymKYKuBQa9Gh3HvUnL";
+  const cohereKey = process.env.COHERE_API_KEY || "vdcFzipj6WmsuMir75KhPiymKYKuBQa9Gh3HvUnL";
   if (!cohereKey) {
     return new NextResponse("Missing COHERE_API_KEY", { status: 500 });
   }
+  
   const body = await req.json();
   const { sessionId, content, systemPrompt } = body ?? {};
   if (!sessionId || !content) {
@@ -27,12 +28,14 @@ export async function POST(req) {
     );
   }
 
-  // Insert user message first
-  const { error: insertUserErr } = await supabase
-    .from("messages")
-    .insert({ session_id: sessionId, role: "user", content });
-  if (insertUserErr) {
-    return NextResponse.json({ error: insertUserErr.message }, { status: 500 });
+  // Insert user message first (only if Supabase is configured)
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    const { error: insertUserErr } = await supabase
+      .from("messages")
+      .insert({ session_id: sessionId, role: "user", content });
+    if (insertUserErr) {
+      return NextResponse.json({ error: insertUserErr.message }, { status: 500 });
+    }
   }
 
   // Build minimal context: only system + current user message (no prior history)
@@ -83,8 +86,8 @@ export async function POST(req) {
           // Send as one chunk
           controller.enqueue(new TextEncoder().encode(fullText));
 
-          // Persist assistant message
-          if (fullText.trim().length > 0) {
+          // Persist assistant message (only if Supabase is configured)
+          if (fullText.trim().length > 0 && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
             await supabase
               .from("messages")
               .insert({ session_id: sessionId, role: "assistant", content: fullText });

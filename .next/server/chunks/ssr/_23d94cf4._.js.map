@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/nikhil.s5/Downloads/Oration/career-counselor-chat/src/app/layout.js"],"sourcesContent":["import \"./globals.css\";\r\n\r\nexport const metadata = {\r\n\ttitle: \"Career Counselor Chat\",\r\n\tdescription: \"Cohere-powered career counseling chatbot\",\r\n};\r\n\r\nexport default function RootLayout({ children }) {\r\n\treturn (\r\n\t\t<html lang=\"en\">\r\n\t\t\t<body>{children}</body>\r\n\t\t</html>\r\n\t);\r\n}\r\n\r\n\r\n"],"names":[],"mappings":";;;;;;;;;AAEO,MAAM,WAAW;IACvB,OAAO;IACP,aAAa;AACd;AAEe,SAAS,WAAW,EAAE,QAAQ,EAAE;IAC9C,qBACC,8OAAC;QAAK,MAAK;kBACV,cAAA,8OAAC;sBAAM;;;;;;;;;;;AAGV","debugId":null}},
+    {"offset": {"line": 37, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/nikhil.s5/Downloads/Oration/career-counselor-chat/node_modules/next/src/server/route-modules/app-page/vendored/rsc/react-jsx-dev-runtime.ts"],"sourcesContent":["module.exports = (\n  require('../../module.compiled') as typeof import('../../module.compiled')\n).vendored['react-rsc']!.ReactJsxDevRuntime\n"],"names":["module","exports","require","vendored","ReactJsxDevRuntime"],"mappings":"AAAAA,OAAOC,OAAO,GACZC,QAAQ,4HACRC,QAAQ,CAAC,YAAY,CAAEC,kBAAkB","ignoreList":[0],"debugId":null}}]
+}

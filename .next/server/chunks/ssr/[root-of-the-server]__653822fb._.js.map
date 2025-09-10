@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"","debugId":null}},
+    {"offset": {"line": 7, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/nikhil.s5/Downloads/Oration/career-counselor-chat/src/app/page.js"],"sourcesContent":["import { redirect } from \"next/navigation\";\r\n\r\nexport default function Home() {\r\n\tredirect(\"/chat\");\r\n}\r\n\r\n\r\n"],"names":[],"mappings":";;;;AAAA;AAAA;;AAEe,SAAS;IACvB,IAAA,iMAAQ,EAAC;AACV","debugId":null}}]
+}
